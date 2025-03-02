@@ -1,0 +1,38 @@
+# Ignore virtual environment
+.venv/
+env/
+venv/
+
+# Ignore PyCharm project files
+.idea/
+*.iml
+
+# Ignore compiled Python files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Ignore logs and cache files
+*.log
+*.cache
+*.egg-info/
+dist/
+build/
+
+# Ignore OS-specific files
+.DS_Store
+Thumbs.db
+
+# Ignore test reports
+.junit/
+.coverage
+htmlcov/
+*.cover
+
+# Ignore VS Code settings (if using)
+.vscode/
+
+# Ignore Python package files
+*.egg
+*.whl
