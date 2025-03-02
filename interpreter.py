@@ -163,9 +163,28 @@ def apply_lambda_reductions(expression: str) -> list:
         lambda_transforms = add_trace(lambda_transforms, head_expr, 'α conversion', str(reduced_expr))
 
     head_expr_str = format_lambda_expression(str(head_expr))
+
     lambda_transforms = add_trace(lambda_transforms, head_expr_str, 'End')
 
+    church_result = detect_church_encoding(head_expr)
+    if church_result:
+        lambda_transforms = add_trace(lambda_transforms, church_result, "Church Encoding Recognition")
+
     return lambda_transforms
+
+
+def detect_church_encoding(expression):
+    str_expr = str(expression)
+
+    match = re.match(r"λ([a-zA-Z]+)\.λ([a-zA-Z]+)\.\1$", str_expr)
+    if match:
+        return "True"
+
+    match = re.match(r"λ([a-zA-Z]+)\.λ([a-zA-Z]+)\.\2$", str_expr)
+    if match:
+        return "False"
+
+    return None
 
 
 def remove_outer_parentheses(expression):
