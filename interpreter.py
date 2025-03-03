@@ -123,10 +123,7 @@ def split_lambda_expression(expression):
 
 def substitute(expression, var, value):
     if isinstance(expression, Variable):
-        if isinstance(value, Variable):
-            return re.sub(var, value.name, expression.name)
-        elif isinstance(value, LambdaExpression):
-            return re.sub(var, str(value), expression.name)
+        return value if expression.name == var else expression
     elif isinstance(expression, LambdaExpression):
         if expression.variable == var:
             return expression
@@ -152,7 +149,7 @@ def apply_lambda_reductions(expression: str) -> list:
 
     head_expr = expression_parts[0]
     head_expr = parse_lambda_expression(head_expr)
-    lambda_transforms = add_trace(lambda_transforms, head_expr, 'α conversion', expression)
+    lambda_transforms = add_trace(lambda_transforms, head_expr, 'α conversion of first part')
 
     for i in range(1, len(expression_parts)):
         lambda_transforms = add_trace(lambda_transforms, expression_parts[i], 'Take next part')
@@ -162,7 +159,7 @@ def apply_lambda_reductions(expression: str) -> list:
 
         resolved_head_expr = resolve_variable_conflicts(head_expr, parsed_expr)
         if str(resolved_head_expr) != str(head_expr):
-            lambda_transforms = add_trace(lambda_transforms, head_expr, 'resolve variable conflicts')
+            lambda_transforms = add_trace(lambda_transforms, f"{resolved_head_expr} -> {head_expr}", 'resolve variable conflicts')
             head_expr = resolved_head_expr
 
         reduced_expr = reduce_lambda_expression(head_expr, parsed_expr)
@@ -272,7 +269,7 @@ def add_trace(
         transformation_name,
         previous_transformation=None,
 ) -> list:
-    if previous_transformation != current_transformation:
+    if str(previous_transformation) != str(current_transformation):
         lambda_transforms.append(TransformationStep(current_transformation, transformation_name))
 
     return lambda_transforms
