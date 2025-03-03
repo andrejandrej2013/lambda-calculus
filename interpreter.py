@@ -41,7 +41,6 @@ def parse_lambda_expression(expression):
     match = re.match(r"λ([a-zA-Z]+)\.(.+)", expression)
     if match:
         vars_part, body = match.groups()
-
         body = remove_outer_parentheses(body)
 
         seen_vars = set()
@@ -58,11 +57,39 @@ def parse_lambda_expression(expression):
 
         return parsed_body
 
-    tokens = expression.split()
+    tokens = tokenize_expression(expression)
     if len(tokens) == 1:
-        return Variable(expression)
+        return Variable(tokens[0])
 
-    return Application(parse_lambda_expression(tokens[0]), parse_lambda_expression(" ".join(tokens[1:])))
+    expr = parse_lambda_expression(tokens[0])
+
+    for token in tokens[1:]:
+        expr = Application(expr, parse_lambda_expression(token))
+
+    return expr
+
+
+def tokenize_expression(expression):
+    tokens = []
+    buffer = ""
+
+    for i, char in enumerate(expression):
+        if char.isdigit():
+            buffer += char
+        else:
+            if buffer:
+                tokens.append(buffer)
+                buffer = ""
+
+            if char.isalpha():
+                tokens.append(char)
+            elif char in "()λ.+-*/,":
+                tokens.append(char)
+
+    if buffer:
+        tokens.append(buffer)
+
+    return tokens
 
 
 def format_lambda_expression(expression) -> str:
