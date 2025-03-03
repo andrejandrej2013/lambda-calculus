@@ -17,8 +17,17 @@ class LambdaCalculator(tk.Tk):
         eval_button = tk.Button(self, text="Evaluate", command=self.evaluate_expression, font=("Arial", 12))
         eval_button.pack(pady=5)
 
-        self.result_text = tk.Text(self, height=10, width=60, font=("Arial", 12), state="disabled")
-        self.result_text.pack(pady=10)
+        text_frame = tk.Frame(self)
+        text_frame.pack(pady=10, fill="both", expand=True)
+
+        scrollbar = tk.Scrollbar(text_frame)
+        scrollbar.pack(side="right", fill="y")
+
+        self.result_text = tk.Text(text_frame, height=10, width=60, font=("Arial", 12), state="disabled",
+                                   yscrollcommand=scrollbar.set)
+        self.result_text.pack(side="left", fill="both", expand=True)
+
+        scrollbar.config(command=self.result_text.yview)
 
     def insert_lambda(self):
         self.expression_entry.insert(tk.INSERT, "λ")
@@ -44,4 +53,3 @@ class LambdaCalculator(tk.Tk):
             i += 1
 
         self.result_text.config(state="disabled")
-
