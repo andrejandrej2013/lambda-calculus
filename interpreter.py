@@ -1,4 +1,5 @@
 import re
+import string
 
 
 class LambdaExpression:
@@ -155,10 +156,18 @@ def apply_lambda_reductions(expression: str) -> list:
 
     for i in range(1, len(expression_parts)):
         lambda_transforms = add_trace(lambda_transforms, expression_parts[i], 'Take next part')
+
         parsed_expr = parse_lambda_expression(expression_parts[i])
         lambda_transforms = add_trace(lambda_transforms, parsed_expr, 'α conversion', expression_parts[i])
+
+        resolved_head_expr = resolve_variable_conflicts(head_expr, parsed_expr)
+        if str(resolved_head_expr) != str(head_expr):
+            lambda_transforms = add_trace(lambda_transforms, head_expr, 'resolve variable conflicts')
+            head_expr = resolved_head_expr
+
         reduced_expr = reduce_lambda_expression(head_expr, parsed_expr)
         lambda_transforms = add_trace(lambda_transforms, reduced_expr, 'β reduction', parsed_expr)
+
         head_expr = parse_lambda_expression(str(reduced_expr))
         lambda_transforms = add_trace(lambda_transforms, head_expr, 'α conversion', str(reduced_expr))
 
@@ -171,6 +180,62 @@ def apply_lambda_reductions(expression: str) -> list:
         lambda_transforms = add_trace(lambda_transforms, church_result, "Church Encoding Recognition")
 
     return lambda_transforms
+
+
+def resolve_variable_conflicts(lambda_expr, arg_expr):
+    if not isinstance(lambda_expr, LambdaExpression):
+        return lambda_expr
+
+    bound = get_bound(arg_expr)
+    existing_var = get_bound(lambda_expr)
+    existing_var.update(bound)
+
+    return replace_variable_conflicts(lambda_expr, bound, existing_var)
+
+
+def replace_variable_conflicts(lambda_expr, bound, existing_var):
+    if len(bound) == 0:
+        return lambda_expr
+
+    replacement_variable = generate_unique_variable(existing_var)
+
+    lambda_expr = str(lambda_expr)
+
+    for var in bound:
+        lambda_expr, count = re.subn(var, replacement_variable, lambda_expr)
+
+        if count > 0:
+            existing_var.add(replacement_variable)
+            replacement_variable = generate_unique_variable(existing_var)
+
+    return parse_lambda_expression(lambda_expr)
+
+
+def generate_unique_variable(existing_vars):
+    for char in string.ascii_lowercase:  # Uses 'a' to 'z'
+        if char not in existing_vars:
+            return char
+
+    counter = 1
+    while True:
+        candidate = f"x{counter}"
+        if candidate not in existing_vars:
+            return candidate
+        counter += 1
+
+
+def get_bound(expression, bound=None):
+    if bound is None:
+        bound = set()
+    if isinstance(expression, Variable):
+        for var in expression.name:
+            bound.add(var)
+        return bound
+    if isinstance(expression, LambdaExpression):
+        bound = get_bound(expression.variable, bound)
+        bound = get_bound(expression.body, bound)
+    return bound
+
 
 
 def detect_church_encoding(expression):
